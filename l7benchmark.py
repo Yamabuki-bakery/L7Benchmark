@@ -6,7 +6,7 @@ from mytypes import Args, BaseProfile, HttpMethod
 from urlparse import generate_new_url_and_hostname
 import logging
 from stats import Stats
-from workers import worker
+from workers import worker, debug_worker
 from result import Ok, Err
 from config import client_session_options, tcp_connector_options
 from profile_loader import load_profile
@@ -29,6 +29,7 @@ parser.add_argument("-p", "--profile",
 parser.add_argument("-X", "--method",
                    type=HttpMethod, choices=list(HttpMethod), default=HttpMethod.GET,
                    help="HTTP method to use for requests (default: GET)")
+parser.add_argument('--debug', action='store_true', default=False, help="Enable debug mode, inspect every request and response")
 
 
 cmdargs = parser.parse_args()
@@ -43,6 +44,7 @@ args = Args(
     header=cmdargs.header,
     profile=cmdargs.profile,
     method=cmdargs.method,
+    debug=cmdargs.debug,
 )
 
 
@@ -72,8 +74,17 @@ async def main():
     ) if args.shared_session else None
 
     assert isinstance(new_url, str)
+
+    if args.debug:
+        logging.info("Debug mode enabled")
+        selected_worker = debug_worker
+        pool_size = 1
+    else:
+        selected_worker = worker
+        pool_size = args.connection * 2 if session is not None else args.connection
+
     tasks = [
-        asyncio.create_task(worker(
+        asyncio.create_task(selected_worker(
             session=session, 
             profile=profile,
             semaphore=semaphore, 
@@ -81,12 +92,12 @@ async def main():
             args=args,
             worker_id=i,
         ))
-        for i in range(args.connection * 2 if session is not None else args.connection)  # 在共享 Session 的情況下，多準備幾個 workers，然後用 semaphore 控制
+        for i in range(pool_size)  # 在共享 Session 的情況下，多準備幾個 workers，然後用 semaphore 控制
     ]
     stats_task = asyncio.create_task(print_stats(end_time))
 
     try:
-        await asyncio.sleep(args.time)
+        await asyncio.sleep(999999999 if args.debug else args.time)
     except asyncio.exceptions.CancelledError:
         pass
 

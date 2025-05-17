@@ -29,6 +29,7 @@ class Args():
     body: bool
     header: list[str]
     profile: str
+    debug: bool
     method: HttpMethod = HttpMethod.GET
 
 type UrlGetter = Callable[..., str]
