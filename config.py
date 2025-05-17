@@ -5,7 +5,7 @@ from mytypes import ClientSessionOptions
 
 client_session_options: ClientSessionOptions = {
     # 'connector': aiohttp.TCPConnector(ssl=False),
-    'timeout': aiohttp.ClientTimeout(total=10),
+    'timeout': aiohttp.ClientTimeout(total=45),
     'auto_decompress': False,
 }
 tcp_connector_options: dict[str, Any]  = {

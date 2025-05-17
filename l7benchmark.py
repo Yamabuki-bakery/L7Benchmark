@@ -120,7 +120,7 @@ def print_final_stats(stats: Stats) -> None:
     print(f"3xx: {stats.get_3xx_requests()}")
     print(f"4xx: {stats.get_4xx_requests()}")
     print(f"5xx: {stats.get_5xx_requests()}")
-    print(f"Other: {stats.get_other_requests()}")
+    print(f"No Return: {stats.get_other_requests()}")
     print(f"Elapsed Time: {args.time} seconds")
 
 async def print_stats(end_time: float) -> None:
@@ -136,7 +136,7 @@ async def print_stats(end_time: float) -> None:
         elapsed = time.time() - start
         print(f"\rRequests: {t} | 2xx: {_2} | "
               f"3xx: {_3} | 4xx: {_4} | "
-              f"5xx: {_5} | Other: {other} | "
+              f"5xx: {_5} | No Return: {other} | "
               f"Elapsed: {elapsed:.2f}s", end="")
 
 if __name__ == "__main__":

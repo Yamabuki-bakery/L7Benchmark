@@ -110,9 +110,9 @@ async def debug_worker(
                         except UnicodeDecodeError:
                             pprint.pprint(data[:1024])
 
-                except Exception as e:
+                except Exception as _:
                     await stats.add_request(-1)
-                    logging.error(f"Request failed: {e}")
+                    # logging.error(f"Request failed: {e}")
 
             input("[Debug Session] Press Enter to continue or Ctrl+C to exit...")
 
