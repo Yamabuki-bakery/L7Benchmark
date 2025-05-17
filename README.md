@@ -1,3 +1,5 @@
+該 Readme 由 Copilot 小姐編寫．
+
 # L7benchmark - 高性能網站壓力測試工具
 
 L7benchmark 是一個靈活、高效的 HTTP/HTTPS 壓力測試工具，專為網站性能評估和負載測試設計。通過非同步 IO 實現高併發請求處理，能夠模擬真實世界中的使用者行為。
@@ -24,6 +26,7 @@ L7benchmark 是一個靈活、高效的 HTTP/HTTPS 壓力測試工具，專為�
 | `-H, --header` | 添加自訂 header，格式為 'Name: Value' (可多次使用) |
 | `-p, --profile` | 指定測試模式檔案路徑 (預設: ./profiles/default.py) |
 | `-X, --method` | 指定 HTTP 方法 (GET, POST, PUT, DELETE, HEAD, OPTIONS) |
+| `--debug` | 進入 Debug 模式，發出單個請求，顯示每個請求和回應的詳細信息 |
 
 ## 💡 Profile 系統介紹
 
@@ -77,6 +80,11 @@ python l7benchmark.py -u https://example.com -p ./profiles/my_profile.py -H "Use
 指定 IP 和 POST 方法：
 ```bash
 python l7benchmark.py -u https://example.com --ip 203.0.113.1 -X POST
+```
+
+使用偵錯模式檢視請求與回應：
+```bash
+python l7benchmark.py -u https://example.com --debug
 ```
 
 ## 📈 結果解讀
