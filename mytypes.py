@@ -25,12 +25,14 @@ class Args():
     connection: int
     ip: Optional[str]
     time: int
-    shared_session: bool
+    # shared_session: bool
     body: bool
     header: list[str]
     profile: str
     debug: bool
+    timeout: int
     method: HttpMethod = HttpMethod.GET
+
 
 type UrlGetter = Callable[..., str]
 

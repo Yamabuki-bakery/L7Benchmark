@@ -2,3 +2,4 @@ aiohttp
 result
 Brotli
 zstd
+uvloop

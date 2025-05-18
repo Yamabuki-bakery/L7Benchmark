@@ -8,8 +8,9 @@ import logging
 from stats import Stats
 from workers import worker, debug_worker
 from result import Ok, Err
-from config import client_session_options, tcp_connector_options
+from config import tcp_connector_options
 from profile_loader import load_profile
+import uvloop
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 stats = Stats()
@@ -20,7 +21,7 @@ parser.add_argument('-c', "--connection", type=int, default=10, help="Concurrent
 parser.add_argument("--ip", help="Override DNS resolution")
 parser.add_argument('-t', "--time", type=int, default=10, help="Test duration in seconds")
 parser.add_argument('-b', "--body", action="store_true", default=False, help="Download response body")
-parser.add_argument("--shared-session", action="store_true", default=False, help="Share single client session across all workers")
+# parser.add_argument("--shared-session", action="store_true", default=False, help="Share single client session across all workers")
 parser.add_argument('-H', '--header', action='append', default=[], 
                    help="Add custom header to request (can be used multiple times). Format: 'Name: Value'")
 parser.add_argument("-p", "--profile", 
@@ -30,7 +31,7 @@ parser.add_argument("-X", "--method",
                    type=HttpMethod, choices=list(HttpMethod), default=HttpMethod.GET,
                    help="HTTP method to use for requests (default: GET)")
 parser.add_argument('--debug', action='store_true', default=False, help="Enable debug mode, inspect every request and response")
-
+parser.add_argument('--timeout', type=int, default=60, help="Timeout for each request in seconds, default: 60")
 
 cmdargs = parser.parse_args()
 
@@ -39,12 +40,13 @@ args = Args(
     connection=cmdargs.connection,
     ip=cmdargs.ip,
     time=cmdargs.time,
-    shared_session=cmdargs.shared_session,
+    # shared_session=cmdargs.shared_session,
     body=cmdargs.body,
     header=cmdargs.header,
     profile=cmdargs.profile,
     method=cmdargs.method,
     debug=cmdargs.debug,
+    timeout=cmdargs.timeout,
 )
 
 
@@ -66,12 +68,12 @@ async def main():
         logging.error(f"Error loading profile: {e}")
         return
 
-    semaphore = asyncio.Semaphore(args.connection)
     end_time = time.time() + args.time
     session = aiohttp.ClientSession(
-        **client_session_options, 
+        timeout=aiohttp.ClientTimeout(total=args.timeout),
+        auto_decompress=False,
         connector=aiohttp.TCPConnector(**tcp_connector_options),
-    ) if args.shared_session else None
+    ) # if args.shared_session else None
 
     assert isinstance(new_url, str)
 
@@ -81,18 +83,17 @@ async def main():
         pool_size = 1
     else:
         selected_worker = worker
-        pool_size = args.connection * 2 if session is not None else args.connection
+        pool_size = args.connection
 
     tasks = [
         asyncio.create_task(selected_worker(
             session=session, 
             profile=profile,
-            semaphore=semaphore, 
             stats=stats,
             args=args,
             worker_id=i,
         ))
-        for i in range(pool_size)  # 在共享 Session 的情況下，多準備幾個 workers，然後用 semaphore 控制
+        for i in range(pool_size)  
     ]
     stats_task = asyncio.create_task(print_stats(end_time))
 
@@ -139,5 +140,6 @@ async def print_stats(end_time: float) -> None:
               f"5xx: {_5} | No Return: {other} | "
               f"Elapsed: {elapsed:.2f}s", end="")
 
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    uvloop.run(main())

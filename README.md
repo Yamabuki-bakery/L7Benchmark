@@ -22,11 +22,11 @@ L7benchmark 是一個靈活、高效的 HTTP/HTTPS 壓力測試工具，專為�
 | `--ip` | 覆蓋 DNS 解析，直接使用指定 IP |
 | `-t, --time` | 測試持續時間 (秒，預設: 10) |
 | `-b, --body` | 下載回應內容 (預設不下載) |
-| `--shared-session` | 所有 worker 共享單一 client session（不建議使用）|
 | `-H, --header` | 添加自訂 header，格式為 'Name: Value' (可多次使用) |
 | `-p, --profile` | 指定測試模式檔案路徑 (預設: ./profiles/default.py) |
 | `-X, --method` | 指定 HTTP 方法 (GET, POST, PUT, DELETE, HEAD, OPTIONS) |
 | `--debug` | 進入 Debug 模式，發出單個請求，顯示每個請求和回應的詳細信息 |
+| `--timeout` | 設置每個請求的超時時間（秒，預設: 60）|
 
 ## 💡 Profile 系統介紹
 
