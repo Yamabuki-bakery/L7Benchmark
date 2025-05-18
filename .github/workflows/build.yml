@@ -70,7 +70,7 @@ jobs:
           dist/l7benchmark-*
     
     - name: Generate Release Notes
-      if: startsWith(github.ref, 'refs/tags/')
+      if: github.ref_type == 'tag'
       id: generate_notes
       run: |
         echo "## L7Benchmark Release ${{ github.ref_name }}" > RELEASE_NOTES.md
@@ -79,7 +79,7 @@ jobs:
         git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"- %s" >> RELEASE_NOTES.md
 
     - name: Create Release on Tag
-      if: startsWith(github.ref, 'refs/tags/')
+      if: github.ref_type == 'tag'
       uses: softprops/action-gh-release@v2
       with:
         files: |
