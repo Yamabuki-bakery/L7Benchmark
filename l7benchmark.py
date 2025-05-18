@@ -25,8 +25,8 @@ parser.add_argument('-b', "--body", action="store_true", default=False, help="Do
 parser.add_argument('-H', '--header', action='append', default=[], 
                    help="Add custom header to request (can be used multiple times). Format: 'Name: Value'")
 parser.add_argument("-p", "--profile", 
-                   type=str, default='./profiles/default.py',
-                   help="Path to request generator profile")
+                   type=str, default='default',
+                   help="Path to request generator profile or profile name (default: 'default')")
 parser.add_argument("-X", "--method",
                    type=HttpMethod, choices=list(HttpMethod), default=HttpMethod.GET,
                    help="HTTP method to use for requests (default: GET)")

@@ -46,7 +46,7 @@ coverage.xml
 
 # Distribution / packaging
 *.manifest
-*.spec
+# *.spec
 
 # Logs
 *.log

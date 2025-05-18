@@ -102,6 +102,7 @@ async def debug_worker(
 
             input("[Debug Session] Press Enter to continue or Ctrl+C to exit...")
 
-    except asyncio.exceptions.CancelledError:
+    except (asyncio.exceptions.CancelledError, KeyboardInterrupt):
+        logging.info("Debug session cancelled.")
         pass
 
