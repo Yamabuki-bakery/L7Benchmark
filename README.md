@@ -95,3 +95,39 @@ python l7benchmark.py -u https://example.com --debug
 - 測試總時長
 
 這些資訊可幫助您全面了解網站在負載下的表現，識別潛在的性能瓶頸和穩定性問題。
+
+## 📦 自動構建
+
+本專案使用 GitHub Actions 來自動構建 Windows、macOS 和 Linux 的執行檔。
+
+### 下載預編譯的執行檔
+
+你可以從 [GitHub Releases](https://github.com/YOUR_USERNAME/l7benchmark/releases) 頁面下載最新的預編譯執行檔。
+
+### 自動構建流程
+
+每當代碼推送到 `main` 或 `master` 分支時，或者提交 Pull Request 到這些分支時，會自動觸發構建流程：
+
+1. 在 Windows、macOS 和 Linux 平台上並行構建
+2. 使用 PyInstaller 打包應用為獨立執行檔
+3. 構建的執行檔將作為 GitHub Actions 的 artifacts 上傳
+4. 當發布新標籤 (tag) 時，執行檔會自動附加到 GitHub Release
+
+### 手動觸發構建
+
+你也可以在 GitHub 界面中通過 "Actions" 選項卡手動觸發構建流程。
+
+### 本地測試構建
+
+在推送到 GitHub 前，你可以使用以下命令在本地測試構建：
+
+```bash
+./test_build.sh
+```
+
+## 🛠️ 自定義構建
+
+如需修改構建配置，請編輯以下文件：
+
+- `.github/workflows/build.yml` - GitHub Actions 構建配置
+- `l7benchmark.spec` - PyInstaller 打包配置

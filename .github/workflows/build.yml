@@ -1,0 +1,77 @@
+name: Build Executables
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.13']
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        pip install -r requirements.txt
+    
+    - name: Build with PyInstaller (Linux/macOS)
+      if: matrix.os != 'windows-latest'
+      run: |
+        pyinstaller l7benchmark.spec
+    
+    - name: Build with PyInstaller (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        pyinstaller l7benchmark.spec
+    
+    - name: Rename executable for platform
+      shell: bash
+      run: |
+        if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+          platform="linux"
+        elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+          platform="macos"
+        elif [ "${{ matrix.os }}" == "windows-latest" ]; then
+          platform="windows"
+        fi
+        
+        if [ "${{ matrix.os }}" == "windows-latest" ]; then
+          cp dist/l7benchmark.exe dist/l7benchmark-$platform.exe
+        else
+          cp dist/l7benchmark dist/l7benchmark-$platform
+          chmod +x dist/l7benchmark-$platform
+        fi
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: l7benchmark-${{ runner.os }}
+        path: |
+          dist/l7benchmark-*
+    
+    - name: Create Release on Tag
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/l7benchmark-*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
