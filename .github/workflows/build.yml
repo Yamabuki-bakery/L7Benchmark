@@ -3,6 +3,8 @@ name: Build Executables
 on:
   push:
     branches: [ main, master ]
+    tags:
+      - 'v*'  # This will trigger the workflow when pushing tags that start with 'v'
   pull_request:
     branches: [ main, master ]
   # Allow manual triggering
