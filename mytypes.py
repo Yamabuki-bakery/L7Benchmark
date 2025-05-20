@@ -34,6 +34,7 @@ class Args():
     method: HttpMethod = HttpMethod.GET
 
 
+# This syntax needs Python 3.12+
 type UrlGetter = Callable[..., str]
 
 type ClientSessionOptions = dict[str, Any]

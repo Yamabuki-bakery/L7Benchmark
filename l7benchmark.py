@@ -153,7 +153,7 @@ async def print_stats(end_time: float) -> None:
         
         # Join all parts with separator and print
         status_str = " | ".join(status_str_parts)
-        print(status_str, end="\r")
+        print("\r" + status_str, end="")
 
 
 if __name__ == "__main__":
