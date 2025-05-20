@@ -26,6 +26,7 @@ async def worker(
                     last_url=last_url,
                     last_status_code=last_status_code,
                 )
+                await stats.add_req()
                 async with session.request(
                     method=reqinfo.method.value,
                     url=reqinfo.url,
@@ -36,11 +37,15 @@ async def worker(
                 ) as response:
                     if args.body:
                         await response.read()
-                    await stats.add_request(response.status)
+                    await stats.add_resp(response.status)
                     last_url = reqinfo.url
                     last_status_code = response.status
+
+            except asyncio.TimeoutError:
+                await stats.add_resp(-1)
+
             except Exception as _:
-                await stats.add_request(-1)
+                await stats.add_resp(-2)
 
     except asyncio.exceptions.CancelledError:
         pass
@@ -69,7 +74,7 @@ async def debug_worker(
                 logging.info(f'[Profile] Headers:')
                 pprint.pprint(reqinfo.headers)
                 logging.info(f'[Profile] Body Size: {len(reqinfo.body or [])}')
-
+                await stats.add_req()
                 async with session.request(
                     method=str(reqinfo.method),
                     url=reqinfo.url,
@@ -94,10 +99,14 @@ async def debug_worker(
                         pprint.pprint(text[:1024])
                     except UnicodeDecodeError:
                         pprint.pprint(data[:1024])
-                    await stats.add_request(response.status)
+                    await stats.add_resp(response.status)
+
+            except asyncio.TimeoutError:
+                await stats.add_resp(-1)
+                logging.error("Request timed out.")
 
             except Exception as e:
-                await stats.add_request(-1)
+                await stats.add_resp(-2)
                 logging.error(f"Request failed: {e}")
 
             input("[Debug Session] Press Enter to continue or Ctrl+C to exit...")

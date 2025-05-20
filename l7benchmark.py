@@ -121,24 +121,39 @@ def print_final_stats(stats: Stats) -> None:
     print(f"3xx: {stats.get_3xx_requests()}")
     print(f"4xx: {stats.get_4xx_requests()}")
     print(f"5xx: {stats.get_5xx_requests()}")
-    print(f"No Return: {stats.get_other_requests()}")
+    print(f"Timeout: {stats.get_timeout_requests()}")
     print(f"Elapsed Time: {args.time} seconds")
 
+        
 async def print_stats(end_time: float) -> None:
     start = time.time()
     while time.time() < end_time:
         await asyncio.sleep(0.25)
-        t = stats.sum_requests()
-        _2 = stats.get_2xx_requests()
-        _3 = stats.get_3xx_requests()
-        _4 = stats.get_4xx_requests()
-        _5 = stats.get_5xx_requests()
-        other = stats.get_other_requests()
+        # Sort the status codes and print non-zero values
+        status_codes = sorted([k for k in stats.resp_records.keys() if k > 0])
+        status_str_parts: list[str] = []
+        
+        # Add the req/resp summary
+        status_str_parts.append(f"Req/Resp: {stats.req_sent}/{stats.sum_requests()}")
+        
+        # Add individual status codes
+        for code in status_codes:
+            count = stats.resp_records[code]
+            if count > 0:
+                status_str_parts.append(f"{code}: {count}")
+        
+        # Add timeout count if any
+        timeout_count = stats.get_timeout_requests()
+        if timeout_count > 0:
+            status_str_parts.append(f"Timeout: {timeout_count}")
+
+        # show elapsed time
         elapsed = time.time() - start
-        print(f"\rRequests: {t} | 2xx: {_2} | "
-              f"3xx: {_3} | 4xx: {_4} | "
-              f"5xx: {_5} | No Return: {other} | "
-              f"Elapsed: {elapsed:.2f}s", end="")
+        status_str_parts.append(f"Elapsed: {elapsed:.2f}s")
+        
+        # Join all parts with separator and print
+        status_str = " | ".join(status_str_parts)
+        print(status_str, end="\r")
 
 
 if __name__ == "__main__":

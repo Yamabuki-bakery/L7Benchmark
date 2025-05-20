@@ -2,61 +2,31 @@ import asyncio
 
 class Stats:
     def __init__(self):
-        self._2xx_requests = 0
-        self._3xx_requests = 0
-        self._4xx_requests = 0
-        self._5xx_requests = 0
-        self.other_requests = 0
-        self.download_bytes = 0
-        self.upload_bytes = 0
+        self.resp_records : dict[int, int] = {}  # -1 for timeout, -2 for unknown error
+        self.req_sent = 0
         self.mutex = asyncio.Lock()
 
     async def reset(self):
         """ Reset all statistics to zero. """
         async with self.mutex:
-            self._2xx_requests = 0
-            self._3xx_requests = 0
-            self._4xx_requests = 0
-            self._5xx_requests = 0
-            self.other_requests = 0
-            self.download_bytes = 0
-            self.upload_bytes = 0
+            self.resp_records = {}
 
-
-    async def add_download_bytes(self, bytes: int):
-        """ Add bytes to the download statistics.
-        Args:
-            bytes (int): The number of bytes to add to the download statistics.
-        """
+    async def add_req(self):
+        """ Increment the number of requests sent. """
         async with self.mutex:
-            self.download_bytes += bytes
+            self.req_sent += 1
 
-    async def add_upload_bytes(self, bytes: int):
-        """ Add bytes to the upload statistics.
-        Args:
-            bytes (int): The number of bytes to add to the upload statistics.
-        """
-        async with self.mutex:
-            self.upload_bytes += bytes
-
-    async def add_request(self, status_code: int):
-        """ Categorize the request based on its status code.
+    async def add_resp(self, status_code: int):
+        """ Categorize the response based on its status code.
 
         Args:
             status_code (int): The HTTP status code of the response.
             -1 for unknown status codes
         """
         async with self.mutex:
-            if 200 <= status_code < 300:
-                self._2xx_requests += 1
-            elif 300 <= status_code < 400:
-                self._3xx_requests += 1
-            elif 400 <= status_code < 500:
-                self._4xx_requests += 1
-            elif 500 <= status_code < 600:
-                self._5xx_requests += 1
-            else:
-                self.other_requests += 1
+            if status_code not in self.resp_records:
+                self.resp_records[status_code] = 0
+            self.resp_records[status_code] += 1
 
     def sum_requests(self) -> int:
         """ Calculate the total number of requests.
@@ -64,7 +34,8 @@ class Stats:
         Returns:
             int: The total number of requests.
         """
-        return self._2xx_requests + self._3xx_requests + self._4xx_requests + self._5xx_requests + self.other_requests
+        return sum(self.resp_records.values())
+    
     
     def get_2xx_requests(self) -> int:
         """ Get the number of 2xx requests.
@@ -72,28 +43,33 @@ class Stats:
         Returns:
             int: The number of 2xx requests.
         """
-        return self._2xx_requests
+        return sum([v for k, v in self.resp_records.items() if 200 <= k < 300])
+    
     def get_3xx_requests(self) -> int:
         """ Get the number of 3xx requests.
         Returns:
             int: The number of 3xx requests.
         """
-        return self._3xx_requests
+        return sum([v for k, v in self.resp_records.items() if 300 <= k < 400])
+    
     def get_4xx_requests(self) -> int:
         """ Get the number of 4xx requests.
         Returns:
             int: The number of 4xx requests.
         """
-        return self._4xx_requests
+        return sum([v for k, v in self.resp_records.items() if 400 <= k < 500])
+    
     def get_5xx_requests(self) -> int:
         """ Get the number of 5xx requests.
         Returns:
             int: The number of 5xx requests.
         """
-        return self._5xx_requests
-    def get_other_requests(self) -> int:
-        """ Get the number of other requests.
+        return sum([v for k, v in self.resp_records.items() if 500 <= k < 600])
+    
+    def get_timeout_requests(self) -> int:
+        """ Get the number of timeout requests.
         Returns:
-            int: The number of other requests.
+            int: The number of timeout requests.
         """
-        return self.other_requests
+        return self.resp_records.get(-1, 0)
+    
