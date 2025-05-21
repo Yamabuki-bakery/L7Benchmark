@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+from multiprocessing import connection
 import time
 import aiohttp
 from mytypes import Args, BaseProfile, HttpMethod
@@ -95,7 +96,9 @@ async def main():
         ))
         for i in range(pool_size)  
     ]
-    stats_task = asyncio.create_task(print_stats(end_time))
+    print()
+    connection_counter = lambda: len(session._connector._acquired) # type: ignore
+    stats_task = asyncio.create_task(stats.print_stats(end_time, connection_counter))
 
     try:
         await asyncio.sleep(999999999 if args.debug else args.time)
@@ -125,36 +128,5 @@ def print_final_stats(stats: Stats) -> None:
     print(f"Elapsed Time: {args.time} seconds")
 
         
-async def print_stats(end_time: float) -> None:
-    start = time.time()
-    while time.time() < end_time:
-        await asyncio.sleep(0.25)
-        # Sort the status codes and print non-zero values
-        status_codes = sorted([k for k in stats.resp_records.keys() if k > 0])
-        status_str_parts: list[str] = []
-        
-        # Add the req/resp summary
-        status_str_parts.append(f"Req/Resp: {stats.req_sent}/{stats.sum_requests()}")
-        
-        # Add individual status codes
-        for code in status_codes:
-            count = stats.resp_records[code]
-            if count > 0:
-                status_str_parts.append(f"{code}: {count}")
-        
-        # Add timeout count if any
-        timeout_count = stats.get_timeout_requests()
-        if timeout_count > 0:
-            status_str_parts.append(f"Timeout: {timeout_count}")
-
-        # show elapsed time
-        elapsed = time.time() - start
-        status_str_parts.append(f"Elapsed: {elapsed:.2f}s")
-        
-        # Join all parts with separator and print
-        status_str = " | ".join(status_str_parts)
-        print("\r" + status_str, end="")
-
-
 if __name__ == "__main__":
     uvloop.run(main())

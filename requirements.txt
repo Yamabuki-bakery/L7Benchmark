@@ -3,3 +3,4 @@ result
 Brotli
 zstd
 uvloop
+pyinstaller

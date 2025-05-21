@@ -16,6 +16,8 @@ async def worker(
     args: Args,
     worker_id: int,
 ) -> None:
+    if worker_id > 200:
+        await asyncio.sleep(0.003 * worker_id) 
     try:
         last_url: Optional[str] = None
         last_status_code: Optional[int] = None
@@ -44,8 +46,9 @@ async def worker(
             except asyncio.TimeoutError:
                 await stats.add_resp(-1)
 
-            except Exception as _:
+            except Exception as e:
                 await stats.add_resp(-2)
+                logging.error(f"Request failed: {e}")
 
     except asyncio.exceptions.CancelledError:
         pass

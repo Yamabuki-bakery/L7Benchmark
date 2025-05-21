@@ -1,4 +1,5 @@
-import asyncio
+import asyncio, time
+from typing import Callable
 
 class Stats:
     def __init__(self):
@@ -73,3 +74,57 @@ class Stats:
         """
         return self.resp_records.get(-1, 0)
     
+    async def print_stats(
+            self, 
+            end_time: float,
+            sum_connection: Callable[[], int] 
+            ) -> None:
+        self.next = True
+        start = time.time()
+        while time.time() < end_time:
+            await asyncio.sleep(0.25)
+            # Sort the status codes and print non-zero values
+            status_codes = sorted([k for k in self.resp_records.keys() if k > 0])
+            status_str_parts: list[str] = []
+            
+            # Add the req/resp summary
+            status_str_parts.append(
+                f"{'🌕' if self.next else '🌑'}Req/Resp/Conn: {self.req_sent}/{self.sum_requests()}/{sum_connection()}"
+            )
+            
+            # Add individual status codes
+            for code in status_codes:
+                count = self.resp_records[code]
+                color: str = ''
+                if 200 <= code < 300:
+                    color = '🟢'
+                elif 300 <= code < 400:
+                    color = '🟡'
+                elif 400 <= code < 500:
+                    color = '🔴'
+                elif 500 <= code < 600:
+                    color = '🟣'
+                else:
+                    color = ''
+                if count > 0:
+                    status_str_parts.append(f"{color}{code}: {count}")
+            
+            # Add timeout count if any
+            timeout_count = self.get_timeout_requests()
+            if timeout_count > 0:
+                status_str_parts.append(f"Timeout: {timeout_count}")
+
+            # Add unknown error count if any
+            unknown_count = self.resp_records.get(-2, 0)
+            if unknown_count > 0:
+                status_str_parts.append(f"❌Err: {unknown_count}")
+
+            # show elapsed time
+            elapsed = time.time() - start
+            status_str_parts.append(f"🕑Elapsed: {elapsed:.2f}s")
+            
+            # Join all parts with separator and print
+            status_str = " | ".join(status_str_parts)
+            print("\r" + status_str, end="")
+            self.next = not self.next
+
